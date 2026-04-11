@@ -1,186 +1,208 @@
-# Fraud Detection 
+# Fraud Detection - EDA and Multi-Model Pipeline
 
-## Project Overview
+## Overview
 
-This project focuses on analyzing a financial transactions dataset to detect fraudulent activities. Through comprehensive exploratory data analysis (EDA), the goal is to uncover hidden patterns, anomalies, and relationships that distinguish fraudulent transactions from legitimate ones.
+This project focuses on detecting fraudulent transactions using the IEEE dataset by combining **exploratory data analysis (EDA)** with a **multi-model machine learning pipeline**.
 
-The notebook provides a step-by-step workflow starting from raw data understanding to actionable insights, forming a strong foundation for building predictive machine learning models.
-
----
-
-## Problem Statement
-
-Fraudulent transactions pose a significant risk in financial systems. Detecting them is challenging due to:
-
-* Severe class imbalance
-* Hidden patterns in high-dimensional data
-* Evolving fraud techniques
-
-This project aims to explore the dataset deeply to identify signals that can help in fraud detection.
+The core idea behind this work is that fraud detection should not rely solely on transaction-level anomalies, but also incorporate **user behavior patterns**, which often provide stronger predictive signals.
 
 ---
 
-## Dataset Information
+## Dataset Description
 
-The dataset contains transaction-level data with the following characteristics:
+The dataset consists of two main components:
 
-* Numerical and/or anonymized features
-* Transaction timestamps or sequence-related features
-* Transaction amount
-* Target variable indicating fraud (1 = Fraud, 0 = Legitimate)
+### 1. Transaction Data (`train_transaction`)
 
-### Key Challenges:
+Contains transaction-level information:
 
-* Imbalanced dataset (fraud cases are rare)
-* Presence of outliers
-* Feature interpretability (if anonymized)
+* `TransactionID`: Unique identifier
+* `TransactionAmt`: Transaction amount
+* `TransactionDT`: Time delta from a reference point
+* `ProductCD`: Product category
+* `card1–card6`: Payment card attributes
+* `addr1, addr2`: Address-related features
+* `dist1, dist2`: Distance features
+* `isFraud`: Target variable (0 = non-fraud, 1 = fraud)
+* `V1–V339`: Engineered anonymized features
+
+---
+
+### 2. Identity Data (`train_identity`)
+
+Contains user/device-level attributes:
+
+* `DeviceType`: Mobile or desktop
+* `DeviceInfo`: Device details
+* `id_31`: Browser information
+* `id_33`: Screen resolution
+* `id_12–id_38`: Identity-related anonymized features
+
+---
+
+## Key Observations
+
+* Not all transactions include identity information
+* Missing identity data can act as a **strong fraud indicator**
+* The dataset is **highly imbalanced**, with very few fraud cases
+* Many features contain **significant missing values**
+* Behavioral inconsistencies often correlate with fraudulent activity
+
+---
+
+## Data Processing
+
+### Merging Datasets
+
+Transaction and identity datasets are merged to enrich feature space:
+
+```python
+df = df_trans.merge(df_id, on="TransactionID", how="left")
+```
+
+### Important Considerations
+
+* Missing values are treated as **informative signals**, not simply removed
+* Identity and transaction features are combined for better context
+* Care is taken to preserve data integrity during merging
+
+---
+
+## Exploratory Data Analysis (EDA)
+
+### Key Insights
+
+* Fraud is strongly linked to **behavioral inconsistencies**
+* `TransactionDT` represents **relative time**, not actual timestamps
+* Certain devices, browsers, and missing identity patterns show higher fraud rates
+* Feature interactions reveal stronger signals than individual variables
+
+### Core Insight
+
+Understanding **user behavior patterns** is more effective than focusing solely on transaction anomalies.
+
+---
+
+## Preprocessing Pipeline
+
+A custom preprocessing function is implemented to standardize data preparation:
+
+```python
+def preprocess(data, is_train=True, label_encoders=None):
+    ...
+```
+
+### Responsibilities
+
+* Handle missing values (retain signal where useful)
+* Encode categorical variables
+* Align training and testing datasets
+* Prepare features for model compatibility
+
+---
+
+## Modeling Approach
+
+Multiple machine learning models are trained and compared:
+
+* Random Forest
+* Gradient Boosting-based models
+* Additional aligned models for experimentation
+
+```python
+models = {
+    ...
+}
+```
+
+### Why Multiple Models?
+
+* Improves robustness
+* Captures different patterns in data
+* Reduces reliance on a single model’s bias
+
+---
+
+## Threshold Optimization
+
+A custom threshold tuning function is used:
+
+```python
+def find_optimal_threshold(y_true, y_prob, min_recall=0.30):
+    ...
+```
+
+### Rationale
+
+* Fraud detection prioritizes **recall over precision**
+* Missing fraud cases is more costly than false positives
+* Threshold tuning allows better control over model behavior
+
+---
+
+## Training and Evaluation Pipeline
+
+### Workflow
+
+1. Preprocess data
+2. Train multiple models
+3. Generate prediction probabilities
+4. Optimize classification threshold
+5. Evaluate performance
+
+```python
+results = {}
+```
+
+### Evaluation Focus
+
+* Recall (primary metric)
+* Precision
+* F1-score
+* Model stability
+
+---
+
+## Key Takeaways
+
+* Fraud detection improves significantly with **feature understanding**
+* Behavioral patterns provide stronger signals than isolated transactions
+* Missing data can be **predictive rather than problematic**
+* Combining multiple models increases reliability and performance
+
+---
+
+## Future Improvements
+
+* User-level aggregation features
+* Advanced time-based feature engineering
+* Deep learning models
+* Graph-based fraud detection approaches
+* Real-time fraud detection systems
 
 ---
 
 ## Project Structure
 
 ```
-fraud-detection-eda/
+├── EDA Notebook
+│   └── Understanding Dataset and EDA for Fraud Detection.ipynb
 │
-├── Understanding Dataset and EDA for Fraud Detection - Updated.ipynb
-├── data/
-│   └── dataset.csv
-├── outputs/
-│   ├── plots/
-│   └── reports/
+├── Modeling Notebook
+│   └── IEEE_Fraud_Multi_Model_Aligned.ipynb
+│
 └── README.md
 ```
 
 ---
 
-## Tech Stack
+## Conclusion
 
-* Python 3.8+
-* Jupyter Notebook
+This project demonstrates that effective fraud detection depends on a combination of:
 
-### Libraries Used
+* Strong data understanding
+* Thoughtful feature engineering
+* Model selection and optimization
 
-* pandas – data manipulation
-* numpy – numerical operations
-* matplotlib – basic visualization
-* seaborn – advanced visualization
-* scikit-learn – preprocessing and utilities
+A **behavior-focused approach** provides significantly better predictive performance compared to traditional transaction-only methods.
 
----
-
-## Installation
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/your-username/fraud-detection-eda.git
-cd fraud-detection-eda
-```
-
-### 2. Install Dependencies
-
-```bash
-pip install pandas numpy matplotlib seaborn scikit-learn jupyter
-```
-
-### 3. Run Notebook
-
-```bash
-jupyter notebook
-```
-
-Open:
-
-```
-Understanding Dataset and EDA for Fraud Detection - Updated.ipynb
-```
-
----
-
-## Workflow
-
-### 1. Data Understanding
-
-* Load dataset
-* Inspect shape, columns, and data types
-* Summary statistics
-
-### 2. Data Cleaning
-
-* Handle missing values (if any)
-* Remove duplicates
-* Validate data consistency
-
-### 3. Exploratory Data Analysis (EDA)
-
-#### Univariate Analysis
-
-* Distribution of each feature
-* Skewness and spread
-
-#### Bivariate Analysis
-
-* Fraud vs non-fraud comparisons
-* Feature relationships
-
-#### Multivariate Analysis
-
-* Correlation heatmap
-* Feature interactions
-
-#### Outlier Detection
-
-* Boxplots
-* Extreme value analysis
-
-#### Class Imbalance Analysis
-
-* Fraud vs non-fraud ratio visualization
-
----
-
-## Key Insights
-
-* Fraud cases are significantly fewer than normal transactions (high imbalance)
-* Certain features show distinct behavior for fraud cases
-* Outliers are more prevalent in fraudulent transactions
-* Some features may have strong predictive power based on correlation patterns
-
----
-
-## Visualization Highlights
-
-* Histograms for feature distributions
-* Boxplots for outlier detection
-* Heatmaps for correlation analysis
-* Count plots for class imbalance
-
----
-
-## Limitations
-
-* Dataset imbalance may bias models
-* Some features may be anonymized, limiting interpretability
-* EDA alone cannot confirm causation
-
----
-
-## Future Improvements
-
-* Feature engineering (scaling, transformations)
-* Handling imbalance (SMOTE, undersampling)
-* Model development:
-
-  * Logistic Regression
-  * Random Forest
-  * Gradient Boosting (XGBoost)
-* Model evaluation (ROC-AUC, Precision-Recall)
-* Deployment using APIs or dashboards
-
-
----
-
-## License
-
-This project is licensed under the MIT License.
----
