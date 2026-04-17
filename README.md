@@ -14,7 +14,7 @@ The dataset consists of two main components:
 
 ### 1. Transaction Data (`train_transaction`)
 
-Contains transaction-level information:
+Contains transaction-level information
 
 * `TransactionID`: Unique identifier
 * `TransactionAmt`: Transaction amount
