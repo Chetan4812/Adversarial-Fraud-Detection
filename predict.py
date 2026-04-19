@@ -84,6 +84,11 @@ def score_new_data(
     """
     new_tr = pd.read_csv(new_transaction_path)
     new_id = pd.read_csv(new_identity_path)
+    if "TransactionID" not in new_tr.columns:
+        raise ValueError("Transaction data must contain a 'TransactionID' column.")
+    if "TransactionID" not in new_id.columns:
+        raise ValueError("Identity data must contain a 'TransactionID' column.")
+
     new_df = new_tr.merge(new_id, on="TransactionID", how="left")
     new_df = add_features(new_df)
     new_df = new_df.drop(columns=["TransactionID"], errors="ignore")

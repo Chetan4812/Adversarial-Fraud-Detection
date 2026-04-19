@@ -7,3 +7,4 @@ matplotlib
 joblib
 ipykernel
 seaborn
+streamlit

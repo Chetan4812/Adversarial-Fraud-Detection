@@ -43,7 +43,13 @@ Score new transaction data using the best available model in `artifacts/`.
 python score.py --transaction data/test_transaction.csv --identity data/test_identity.csv
 ```
 
-### 3. Docker Support
+### 3. Dashboard (Streamlit)
+Launch the interactive web frontend to upload CSVs and visualize results.
+```bash
+streamlit run app.py
+```
+
+### 4. Docker Support
 Run the entire pipeline in a containerized environment.
 ```bash
 # Build

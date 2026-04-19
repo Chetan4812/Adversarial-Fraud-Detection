@@ -24,6 +24,10 @@ COPY . .
 # Create artifacts directory for saved models
 RUN mkdir -p artifacts
 
-# Default command (can be overridden)
-# For example: docker run <image> python train.py
-CMD ["python", "train.py"]
+# Expose necessary ports (8501 for Streamlit)
+EXPOSE 8501
+
+# Default command
+# To run training: docker run <image> python train.py
+# To run dashboard: docker run -p 8501:8501 <image>
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
