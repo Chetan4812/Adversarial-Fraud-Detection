@@ -1,208 +1,317 @@
-# Fraud Detection - EDA and Multi-Model Pipeline
+# Adversarial Fraud Detection
+
+A production-grade, multi-model fraud detection pipeline built on the IEEE-CIS Fraud Detection dataset. Combines behavioral feature engineering, adversarial-aware preprocessing, and threshold-optimized classification to catch fraud with high precision and recall.
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-enabled-orange)
+![CatBoost](https://img.shields.io/badge/CatBoost-enabled-yellow)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Dataset](#dataset)
+- [Project Structure](#project-structure)
+- [Modeling Pipeline](#modeling-pipeline)
+- [Feature Engineering](#feature-engineering)
+- [Threshold Optimization](#threshold-optimization)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Docker](#docker)
+- [Dependencies](#dependencies)
+- [Future Work](#future-work)
+
+---
 
 ## Overview
 
-This project focuses on detecting fraudulent transactions using the IEEE dataset by combining **exploratory data analysis (EDA)** with a **multi-model machine learning pipeline**.
+Fraud detection is an adversarial problem — fraudsters actively adapt to evade detection systems. This project tackles the IEEE-CIS Fraud Detection challenge by combining:
 
-The core idea behind this work is that fraud detection should not rely solely on transaction-level anomalies, but also incorporate **user behavior patterns**, which often provide stronger predictive signals.
+- **Deep behavioral feature engineering** (time, device, email, card interaction signals)
+- **A multi-model comparison framework** (Logistic Regression, Random Forest, XGBoost, CatBoost)
+- **Precision-optimized threshold tuning** to maximize F1 under real-world class imbalance
+- **Explainability** via CatBoost feature importance
 
----
-
-## Dataset Description
-
-The dataset consists of two main components:
-
-### 1. Transaction Data (`train_transaction`)
-
-Contains transaction-level information
-
-* `TransactionID`: Unique identifier
-* `TransactionAmt`: Transaction amount
-* `TransactionDT`: Time delta from a reference point
-* `ProductCD`: Product category
-* `card1–card6`: Payment card attributes
-* `addr1, addr2`: Address-related features
-* `dist1, dist2`: Distance features
-* `isFraud`: Target variable (0 = non-fraud, 1 = fraud)
-* `V1–V339`: Engineered anonymized features
+The core insight: **user behavioral inconsistencies** are stronger fraud signals than raw transaction anomalies alone.
 
 ---
 
-### 2. Identity Data (`train_identity`)
+## Architecture
 
-Contains user/device-level attributes:
+![High Level Design](HLD.png)
 
-* `DeviceType`: Mobile or desktop
-* `DeviceInfo`: Device details
-* `id_31`: Browser information
-* `id_33`: Screen resolution
-* `id_12–id_38`: Identity-related anonymized features
+The pipeline follows a modular, production-ready design:
 
----
-
-## Key Observations
-
-* Not all transactions include identity information
-* Missing identity data can act as a **strong fraud indicator**
-* The dataset is **highly imbalanced**, with very few fraud cases
-* Many features contain **significant missing values**
-* Behavioral inconsistencies often correlate with fraudulent activity
-
----
-
-## Data Processing
-
-### Merging Datasets
-
-Transaction and identity datasets are merged to enrich feature space:
-
-```python
-df = df_trans.merge(df_id, on="TransactionID", how="left")
+```
+Raw CSVs -> Merge -> Feature Engineering -> Preprocessing -> Multi-Model Training
+                                                                  |
+                                                  Threshold Tuning -> Evaluation
+                                                                  |
+                                                         Artifact Persistence
+                                                                  |
+                                                       Inference (score.py)
 ```
 
-### Important Considerations
-
-* Missing values are treated as **informative signals**, not simply removed
-* Identity and transaction features are combined for better context
-* Care is taken to preserve data integrity during merging
-
 ---
 
-## Exploratory Data Analysis (EDA)
+## Dataset
 
-### Key Insights
+The project uses the [IEEE-CIS Fraud Detection](https://www.kaggle.com/c/ieee-fraud-detection/data) dataset (Kaggle), consisting of two tables:
 
-* Fraud is strongly linked to **behavioral inconsistencies**
-* `TransactionDT` represents **relative time**, not actual timestamps
-* Certain devices, browsers, and missing identity patterns show higher fraud rates
-* Feature interactions reveal stronger signals than individual variables
+### `train_transaction.csv`
 
-### Core Insight
+| Column | Description |
+|---|---|
+| `TransactionID` | Unique transaction identifier |
+| `TransactionAmt` | Transaction amount |
+| `TransactionDT` | Time delta from a reference point (seconds) |
+| `ProductCD` | Product category |
+| `card1-card6` | Payment card attributes |
+| `addr1, addr2` | Billing/shipping address features |
+| `dist1, dist2` | Distance features |
+| `P_emaildomain` | Purchaser email domain |
+| `R_emaildomain` | Recipient email domain |
+| `V1-V339` | Anonymized engineered features |
+| `isFraud` | **Target** (0 = legitimate, 1 = fraud) |
 
-Understanding **user behavior patterns** is more effective than focusing solely on transaction anomalies.
+### `train_identity.csv`
 
----
+| Column | Description |
+|---|---|
+| `DeviceType` | Mobile or desktop |
+| `DeviceInfo` | Device model/brand details |
+| `id_30` | Operating system |
+| `id_31` | Browser |
+| `id_33` | Screen resolution |
+| `id_12-id_38` | Anonymized identity features |
 
-## Preprocessing Pipeline
-
-A custom preprocessing function is implemented to standardize data preparation:
-
-```python
-def preprocess(data, is_train=True, label_encoders=None):
-    ...
-```
-
-### Responsibilities
-
-* Handle missing values (retain signal where useful)
-* Encode categorical variables
-* Align training and testing datasets
-* Prepare features for model compatibility
-
----
-
-## Modeling Approach
-
-Multiple machine learning models are trained and compared:
-
-* Random Forest
-* Gradient Boosting-based models
-* Additional aligned models for experimentation
-
-```python
-models = {
-    ...
-}
-```
-
-### Why Multiple Models?
-
-* Improves robustness
-* Captures different patterns in data
-* Reduces reliance on a single model’s bias
-
----
-
-## Threshold Optimization
-
-A custom threshold tuning function is used:
-
-```python
-def find_optimal_threshold(y_true, y_prob, min_recall=0.30):
-    ...
-```
-
-### Rationale
-
-* Fraud detection prioritizes **recall over precision**
-* Missing fraud cases is more costly than false positives
-* Threshold tuning allows better control over model behavior
-
----
-
-## Training and Evaluation Pipeline
-
-### Workflow
-
-1. Preprocess data
-2. Train multiple models
-3. Generate prediction probabilities
-4. Optimize classification threshold
-5. Evaluate performance
-
-```python
-results = {}
-```
-
-### Evaluation Focus
-
-* Recall (primary metric)
-* Precision
-* F1-score
-* Model stability
-
----
-
-## Key Takeaways
-
-* Fraud detection improves significantly with **feature understanding**
-* Behavioral patterns provide stronger signals than isolated transactions
-* Missing data can be **predictive rather than problematic**
-* Combining multiple models increases reliability and performance
-
----
-
-## Future Improvements
-
-* User-level aggregation features
-* Advanced time-based feature engineering
-* Deep learning models
-* Graph-based fraud detection approaches
-* Real-time fraud detection systems
+> Note: Not all transactions have identity records. **Missing identity data is treated as a fraud signal**, not a data quality issue.
 
 ---
 
 ## Project Structure
 
 ```
-├── EDA Notebook
-│   └── Understanding Dataset and EDA for Fraud Detection.ipynb
-│
-├── Modeling Notebook
-│   └── IEEE_Fraud_Multi_Model_Aligned.ipynb
-│
-└── README.md
+Adversarial-Fraud-Detection/
+|
++-- Notebooks/
+|   +-- Understanding Dataset and EDA for Fraud Detection.ipynb        # Baseline EDA
+|   +-- Understanding Dataset and EDA for Fraud Detection - Updated.ipynb
+|   +-- eda.ipynb                                                       # Extended EDA
+|   +-- Precision-Optimized Adversarial Fraud Pipeline.ipynb           # Full pipeline
+|
++-- Scripts/
+|   +-- features.py          # Feature engineering & data loading
+|   +-- models.py            # Model definitions & preprocessing pipelines
+|   +-- train.py             # End-to-end training script
+|   +-- evaluate.py          # Metrics, comparison, threshold tuning
+|   +-- predict.py           # Save/load models, score new data
+|   +-- score.py             # CLI scoring tool
+|
++-- Dockerfile
++-- .dockerignore
++-- requirements.txt
++-- HLD.png                  # Architecture diagram
++-- README.md
 ```
 
 ---
 
-## Conclusion
+## Modeling Pipeline
 
-This project demonstrates that effective fraud detection depends on a combination of:
+Five models are trained and compared on a **time-based 80/20 validation split** (respecting transaction chronology to prevent data leakage):
 
-* Strong data understanding
-* Thoughtful feature engineering
-* Model selection and optimization
+| Model | Key Characteristics |
+|---|---|
+| **Dummy Classifier** | Baseline — always predicts majority class |
+| **Logistic Regression** | Linear baseline with balanced class weights |
+| **Random Forest** | 300 trees, balanced subsampling |
+| **XGBoost** | 500 estimators, `scale_pos_weight` for imbalance, `eval_metric=aucpr` |
+| **CatBoost** | 1000 iterations, native categorical support, early stopping on PR-AUC |
 
-A **behavior-focused approach** provides significantly better predictive performance compared to traditional transaction-only methods.
+Models are ranked by **PR-AUC** (Precision-Recall AUC), which is more appropriate than ROC-AUC for highly imbalanced datasets like fraud detection.
 
+---
+
+## Feature Engineering
+
+Handled in `features.py`, the `add_features()` function creates interpretable fraud signals on top of raw columns:
+
+### Time Features
+- `Transaction_hour` — hour of day (cyclic fraud patterns)
+- `Transaction_day` — day index from dataset start
+- `TransactionDT_days` — float day representation
+
+### Amount Features
+- `TransactionAmt_log1p` — log-transformed amount (reduces skew)
+- `TransactionAmt_mod_1` — cents portion (behavioral signal)
+- `is_round_amount` — flag for suspiciously round amounts
+
+### Missingness Features
+- `row_missing_count` — total missing fields per row
+- `v_missing_count` — missing V-columns (anonymized features)
+- `d_missing_count` — missing D-columns (time delta features)
+
+### Interaction Features
+- `email_match` — whether purchaser and recipient email domains match
+- `card4_card6`, `card1_card2`, `card1_card3` — card attribute combinations
+- `card1_card2_ratio` — numeric card ratio
+
+### Device and Browser Features
+- `id_30_os` — extracted OS from `id_30`
+- `id_31_browser` — extracted browser brand from `id_31`
+- `DeviceInfo_brand` — extracted device brand
+- `id_33_w`, `id_33_h`, `id_33_ratio` — screen resolution width/height/aspect ratio
+
+---
+
+## Threshold Optimization
+
+Default 0.5 classification thresholds are suboptimal for fraud. The `tune_threshold()` function in `evaluate.py` scans the precision-recall curve to find the threshold that **maximises F1** on the validation set:
+
+```python
+def tune_threshold(y_valid, best_proba) -> dict:
+    precision, recall, thresholds = precision_recall_curve(y_valid, best_proba)
+    f1_scores = 2 * (precision[:-1] * recall[:-1]) / (precision[:-1] + recall[:-1] + 1e-12)
+    best_idx = int(np.argmax(f1_scores))
+    return {"threshold": float(thresholds[best_idx]), ...}
+```
+
+This threshold is saved alongside the model artifact and applied at inference time.
+
+---
+
+## Installation
+
+### Prerequisites
+- Python 3.10+
+- IEEE-CIS dataset CSVs: `train_transaction.csv` and `train_identity.csv`
+
+### Setup
+
+```bash
+git clone https://github.com/<your-username>/Adversarial-Fraud-Detection.git
+cd Adversarial-Fraud-Detection
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+---
+
+## Usage
+
+### 1. Train
+
+Place `train_transaction.csv` and `train_identity.csv` in the project root, then run:
+
+```bash
+python train.py
+```
+
+This will:
+- Load and merge transaction + identity data
+- Engineer features
+- Train all 5 models on an 80/20 time-based split
+- Compare models by PR-AUC
+- Tune the decision threshold on the best model
+- Save the best model + metadata to `./artifacts/`
+
+### 2. Score New Data
+
+```bash
+python score.py \
+  --transaction test_transaction.csv \
+  --identity test_identity.csv \
+  --output predictions.csv
+```
+
+Output columns:
+
+| Column | Description |
+|---|---|
+| `fraud_probability` | Raw model probability (0 to 1) |
+| `fraud_prediction` | Binary flag (1 = predicted fraud) |
+
+### 3. Notebooks
+
+For exploratory analysis, open the notebooks in order:
+
+```bash
+jupyter notebook "Understanding Dataset and EDA for Fraud Detection.ipynb"
+jupyter notebook "Precision-Optimized Adversarial Fraud Pipeline.ipynb"
+```
+
+---
+
+## Docker
+
+Build and run the full training pipeline in a container:
+
+```bash
+# Build
+docker build -t fraud-detection .
+
+# Train (mount your data directory)
+docker run -v $(pwd)/data:/app/data fraud-detection python train.py
+
+# Score
+docker run -v $(pwd)/data:/app/data -v $(pwd)/artifacts:/app/artifacts \
+  fraud-detection python score.py \
+  --transaction data/test_transaction.csv \
+  --identity data/test_identity.csv \
+  --output data/scores.csv
+```
+
+---
+
+## Dependencies
+
+```
+numpy
+pandas
+scikit-learn
+xgboost
+catboost
+matplotlib
+seaborn
+joblib
+ipykernel
+```
+
+Install all with:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Future Work
+
+| Area | Improvement |
+|---|---|
+| Feature Engineering | User-level aggregation features (velocity, historical fraud rate) |
+| Temporal Modeling | Advanced rolling window and lag features |
+| Graph Features | Graph-based fraud signals (card-device-email networks) |
+| Deep Learning | Tabular deep learning (TabNet, FT-Transformer) |
+| Real-Time Inference | Streaming pipeline with Kafka and model serving |
+| Retraining Loop | Automated model refresh as fraud patterns shift |
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+Built for the [IEEE-CIS Fraud Detection Challenge](https://www.kaggle.com/c/ieee-fraud-detection)
