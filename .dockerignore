@@ -1,0 +1,16 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints
+data/
+train_transaction.csv
+train_identity.csv
+test_transaction.csv
+test_identity.csv
+artifacts/
+*.pkl
+scores.csv
+.DS_Store
