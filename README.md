@@ -1,208 +1,93 @@
-# Fraud Detection - EDA and Multi-Model Pipeline
+# Adversarial Fraud Detection - Multi-Model Pipeline
 
-## Overview
+This project implements a robust fraud detection pipeline using the IEEE-CIS Fraud Detection dataset. It combines extensive Exploratory Data Analysis (EDA) with a high-performance machine learning pipeline featuring CatBoost, XGBoost, and Random Forest.
 
-This project focuses on detecting fraudulent transactions using the IEEE dataset by combining **exploratory data analysis (EDA)** with a **multi-model machine learning pipeline**.
-
-The core idea behind this work is that fraud detection should not rely solely on transaction-level anomalies, but also incorporate **user behavior patterns**, which often provide stronger predictive signals.
+The core philosophy is that fraud detection should not rely solely on transaction-level anomalies, but also incorporate **user behavior patterns** and **missingness signals**, as these often provide stronger predictive power than isolated transaction-level anomalies.
 
 ---
 
-## Dataset Description
+## 🚀 Getting Started
 
-The dataset consists of two main components:
+### Prerequisites
+- Python 3.10+
+- [Docker](https://www.docker.com/) (optional)
 
-### 1. Transaction Data (`train_transaction`)
+### Installation
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Chetan4812/Adversarial-Fraud-Detection.git
+   cd Adversarial-Fraud-Detection
+   ```
 
-Contains transaction-level information
+2. **Setup environment:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-* `TransactionID`: Unique identifier
-* `TransactionAmt`: Transaction amount
-* `TransactionDT`: Time delta from a reference point
-* `ProductCD`: Product category
-* `card1–card6`: Payment card attributes
-* `addr1, addr2`: Address-related features
-* `dist1, dist2`: Distance features
-* `isFraud`: Target variable (0 = non-fraud, 1 = fraud)
-* `V1–V339`: Engineered anonymized features
-
----
-
-### 2. Identity Data (`train_identity`)
-
-Contains user/device-level attributes:
-
-* `DeviceType`: Mobile or desktop
-* `DeviceInfo`: Device details
-* `id_31`: Browser information
-* `id_33`: Screen resolution
-* `id_12–id_38`: Identity-related anonymized features
+3. **Data Requirements:**
+   Place `train_transaction.csv` and `train_identity.csv` in the root directory.
 
 ---
 
-## Key Observations
+## 🛠 Usage
 
-* Not all transactions include identity information
-* Missing identity data can act as a **strong fraud indicator**
-* The dataset is **highly imbalanced**, with very few fraud cases
-* Many features contain **significant missing values**
-* Behavioral inconsistencies often correlate with fraudulent activity
-
----
-
-## Data Processing
-
-### Merging Datasets
-
-Transaction and identity datasets are merged to enrich feature space:
-
-```python
-df = df_trans.merge(df_id, on="TransactionID", how="left")
+### 1. Training the Model
+Executes feature engineering, trains multiple models, compares performance via PR-AUC, and saves the best model.
+```bash
+python train.py
 ```
 
-### Important Considerations
-
-* Missing values are treated as **informative signals**, not simply removed
-* Identity and transaction features are combined for better context
-* Care is taken to preserve data integrity during merging
-
----
-
-## Exploratory Data Analysis (EDA)
-
-### Key Insights
-
-* Fraud is strongly linked to **behavioral inconsistencies**
-* `TransactionDT` represents **relative time**, not actual timestamps
-* Certain devices, browsers, and missing identity patterns show higher fraud rates
-* Feature interactions reveal stronger signals than individual variables
-
-### Core Insight
-
-Understanding **user behavior patterns** is more effective than focusing solely on transaction anomalies.
-
----
-
-## Preprocessing Pipeline
-
-A custom preprocessing function is implemented to standardize data preparation:
-
-```python
-def preprocess(data, is_train=True, label_encoders=None):
-    ...
+### 2. Inference / Scoring
+Score new transaction data using the best available model in `artifacts/`.
+```bash
+python score.py --transaction data/test_transaction.csv --identity data/test_identity.csv
 ```
 
-### Responsibilities
+### 3. Docker Support
+Run the entire pipeline in a containerized environment.
+```bash
+# Build
+docker build -t fraud-detection .
 
-* Handle missing values (retain signal where useful)
-* Encode categorical variables
-* Align training and testing datasets
-* Prepare features for model compatibility
-
----
-
-## Modeling Approach
-
-Multiple machine learning models are trained and compared:
-
-* Random Forest
-* Gradient Boosting-based models
-* Additional aligned models for experimentation
-
-```python
-models = {
-    ...
-}
-```
-
-### Why Multiple Models?
-
-* Improves robustness
-* Captures different patterns in data
-* Reduces reliance on a single model’s bias
-
----
-
-## Threshold Optimization
-
-A custom threshold tuning function is used:
-
-```python
-def find_optimal_threshold(y_true, y_prob, min_recall=0.30):
-    ...
-```
-
-### Rationale
-
-* Fraud detection prioritizes **recall over precision**
-* Missing fraud cases is more costly than false positives
-* Threshold tuning allows better control over model behavior
-
----
-
-## Training and Evaluation Pipeline
-
-### Workflow
-
-1. Preprocess data
-2. Train multiple models
-3. Generate prediction probabilities
-4. Optimize classification threshold
-5. Evaluate performance
-
-```python
-results = {}
-```
-
-### Evaluation Focus
-
-* Recall (primary metric)
-* Precision
-* F1-score
-* Model stability
-
----
-
-## Key Takeaways
-
-* Fraud detection improves significantly with **feature understanding**
-* Behavioral patterns provide stronger signals than isolated transactions
-* Missing data can be **predictive rather than problematic**
-* Combining multiple models increases reliability and performance
-
----
-
-## Future Improvements
-
-* User-level aggregation features
-* Advanced time-based feature engineering
-* Deep learning models
-* Graph-based fraud detection approaches
-* Real-time fraud detection systems
-
----
-
-## Project Structure
-
-```
-├── EDA Notebook
-│   └── Understanding Dataset and EDA for Fraud Detection.ipynb
-│
-├── Modeling Notebook
-│   └── IEEE_Fraud_Multi_Model_Aligned.ipynb
-│
-└── README.md
+# Run Training
+docker run fraud-detection
 ```
 
 ---
 
-## Conclusion
+## 📈 Pipeline Highlights
 
-This project demonstrates that effective fraud detection depends on a combination of:
+- **Feature Engineering**: Implements custom logic for time-based features, transaction amount log-scaling, missingness indicators (V and D columns), and device attribute parsing.
+- **Model Portfolio**: Compares Dummy (baseline), Logistic Regression (scaled), Random Forest, XGBoost, and CatBoost.
+- **CatBoost Integration**: Native handling of categorical variables for superior performance on sparse identity data.
+- **Threshold Tuning**: Custom logic to optimize classification thresholds based on the Precision-Recall curve, prioritizing the detection of rare fraud cases.
 
-* Strong data understanding
-* Thoughtful feature engineering
-* Model selection and optimization
+---
 
-A **behavior-focused approach** provides significantly better predictive performance compared to traditional transaction-only methods.
+## 📂 Project Structure
+```text
+├── artifacts/             # Persisted models and metadata
+├── Dockerfile             # Containerization config
+├── .dockerignore          # Docker exclusion rules
+├── requirements.txt       # Project dependencies
+├── train.py               # Model training script
+├── score.py               # Inference script
+├── features.py            # Feature engineering module
+├── models.py              # Model definitions & pipelines
+├── evaluate.py            # Metrics and PR-AUC tuning logic
+├── predict.py             # Model persistence & scoring logic
+└── README.md              # Documentation
+```
 
+## 📊 Key Insights
+* Fraud is strongly linked to **behavioral inconsistencies**.
+* Missing identity data is a **strong fraud indicator** rather than a problem to be solved.
+* Threshold optimization is critical; detecting a true fraud case is often 10x more valuable than a false alarm.
+
+---
+
+## 📌 Future Roadmap
+- [ ] Implement Target Encoding for high-cardinality features (`card1`, `addr1`).
+- [ ] Add User-level aggregate features (rolling window counts).
+- [ ] Deploy as a REST API using FastAPI.
+- [ ] Integrate SHAP for better interpretability at the transaction level.
