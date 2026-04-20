@@ -209,3 +209,6 @@ __marimo__/
 # Machine Learning Artifacts
 artifacts/
 *.pkl
+*.csv
+*.png
+catboost_info/
