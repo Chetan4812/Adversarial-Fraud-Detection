@@ -1,6 +1,4 @@
-# 🛡️ Adversarial Fraud Detection
-
-![Banner](banner.png)
+# Adversarial Fraud Detection
 
 A production-grade, multi-model fraud detection pipeline built on the [IEEE-CIS Fraud Detection dataset](https://www.kaggle.com/c/ieee-fraud-detection). This project implements high-precision behavioral feature engineering, adversarial-aware preprocessing, and threshold-optimized classification to detect sophisticated fraud patterns.
 
@@ -12,7 +10,7 @@ A production-grade, multi-model fraud detection pipeline built on the [IEEE-CIS 
 
 ---
 
-## 📖 Overview
+## Overview
 
 Standard fraud detection systems often fail to catch "adversarial" behavior—where fraudsters intentionally mask their identity or mimic legitimate user patterns. This pipeline treats **missing identity data** and **behavioral inconsistencies** as primary signals rather than noise, utilizing advanced gradient boosting models to handle sparse, high-cardinality categorical data.
 
@@ -25,7 +23,7 @@ Standard fraud detection systems often fail to catch "adversarial" behavior—wh
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ![High Level Design](HLD.png)
 
@@ -43,7 +41,7 @@ graph LR
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 ├── artifacts/             # Serialized models & metadata (joblib)
@@ -62,7 +60,7 @@ graph LR
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Python 3.10+
@@ -90,7 +88,7 @@ graph LR
 
 ---
 
-## 🛠 Usage
+## Usage
 
 ### 1. Training the Pipeline
 The `train.py` script performs feature engineering, trains all models, compares their PR-AUC, and saves the best-performing model to `artifacts/`.
@@ -118,7 +116,7 @@ python3 -m pytest
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 The project is fully containerized. To build and run the Streamlit dashboard in a container:
 
@@ -132,7 +130,7 @@ docker run -p 8501:8501 fraud-detection
 
 ---
 
-## 📊 Methodology Highlights
+## Methodology Highlights
 
 | Technique | Goal |
 | :--- | :--- |
@@ -143,7 +141,7 @@ docker run -p 8501:8501 fraud-detection
 
 ---
 
-## 📌 Roadmap
+## Roadmap
 - [ ] **Target Encoding**: Implement for high-cardinality features like `card1`.
 - [ ] **REST API**: Wrap the model in a FastAPI endpoint for low-latency inference.
 - [ ] **SHAP Integration**: Add model interpretability to explain *why* a transaction was flagged.
@@ -151,7 +149,7 @@ docker run -p 8501:8501 fraud-detection
 
 ---
 
-## 📄 License
+## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 Built for the [IEEE-CIS Fraud Detection Challenge](https://www.kaggle.com/c/ieee-fraud-detection).
