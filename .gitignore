@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Machine Learning Artifacts
+artifacts/
+*.pkl
+*.csv
+*.png
+catboost_info/
+
+# Temporary inference files
+temp_trans.csv
+temp_id.csv
+scores.csv
