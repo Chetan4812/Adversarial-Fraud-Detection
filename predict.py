@@ -91,7 +91,7 @@ def score_new_data(
 
     new_df = new_tr.merge(new_id, on="TransactionID", how="left")
     new_df = add_features(new_df)
-    new_df = new_df.drop(columns=["TransactionID"], errors="ignore")
+    new_df = new_df.drop(columns=["TransactionID", "isFraud"], errors="ignore")
 
     if best_model_name == "CatBoost":
         temp = new_df.copy()
