@@ -49,14 +49,20 @@ Launch the interactive web frontend to upload CSVs and visualize results.
 streamlit run app.py
 ```
 
-### 4. Docker Support
+### 4. Running Tests
+The project includes unit tests for the feature engineering and prediction modules.
+```bash
+pytest
+```
+
+### 5. Docker Support
 Run the entire pipeline in a containerized environment.
 ```bash
 # Build
 docker build -t fraud-detection .
 
-# Run Training
-docker run fraud-detection
+# Run Dashboard
+docker run -p 8501:8501 fraud-detection
 ```
 
 ---
@@ -73,6 +79,7 @@ docker run fraud-detection
 ## 📂 Project Structure
 ```text
 ├── artifacts/             # Persisted models and metadata
+├── tests/                 # Unit tests for core modules
 ├── Dockerfile             # Containerization config
 ├── .dockerignore          # Docker exclusion rules
 ├── requirements.txt       # Project dependencies
@@ -82,6 +89,7 @@ docker run fraud-detection
 ├── models.py              # Model definitions & pipelines
 ├── evaluate.py            # Metrics and PR-AUC tuning logic
 ├── predict.py             # Model persistence & scoring logic
+├── app.py                 # Streamlit dashboard
 └── README.md              # Documentation
 ```
 

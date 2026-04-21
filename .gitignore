@@ -212,3 +212,8 @@ artifacts/
 *.csv
 *.png
 catboost_info/
+
+# Temporary inference files
+temp_trans.csv
+temp_id.csv
+scores.csv
